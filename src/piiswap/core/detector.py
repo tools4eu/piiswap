@@ -13,6 +13,7 @@ from piiswap.detectors.hostname import HostnamePIIDetector
 from piiswap.detectors.username import UsernameDetector
 from piiswap.detectors.social import SocialHandleDetector
 from piiswap.detectors.fieldlabel import FieldLabelDetector
+from piiswap.detectors.snapchat import SnapchatDetector
 
 
 def get_default_detectors(
@@ -37,6 +38,7 @@ def get_default_detectors(
         UsernameDetector(),
         SocialHandleDetector(),
         FieldLabelDetector(),
+        SnapchatDetector(),
     ]
 
     # Wordlist detectors (if available)
