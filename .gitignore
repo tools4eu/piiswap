@@ -17,6 +17,7 @@ tests/demo/llm_output/*.xlsx
 tests/demo/testdemo/
 tests/demo/input/Production-*
 tests/e2e/
+CASE-*/
 
 # Generated docs
 *.html
