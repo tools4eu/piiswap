@@ -105,16 +105,17 @@ def _resolve_xlsx_target_columns(
     if not pii_columns and not keep_columns:
         return None  # No filtering — process all cells
 
-    # Read header names from row 1
+    # Read header names from row 1 (case-insensitive matching)
     header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=False), [])
-    col_name_to_index = {}
+    col_lower_to_index = {}
     for cell in header_row:
         if cell.value is not None:
-            col_name_to_index[str(cell.value)] = cell.column
+            col_lower_to_index[str(cell.value).lower()] = cell.column
 
     if pii_columns:
-        return {col_name_to_index[c] for c in pii_columns if c in col_name_to_index}
+        return {col_lower_to_index[c.lower()] for c in pii_columns if c.lower() in col_lower_to_index}
 
     # keep_columns: process everything except those columns
-    keep_indices = {col_name_to_index[c] for c in keep_columns if c in col_name_to_index}
-    return {idx for idx in col_name_to_index.values() if idx not in keep_indices}
+    keep_lower = {c.lower() for c in keep_columns}
+    return {idx for idx in col_lower_to_index.values()
+            if list(col_lower_to_index.keys())[list(col_lower_to_index.values()).index(idx)] not in keep_lower}

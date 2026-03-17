@@ -40,7 +40,7 @@ class CsvAdapter(FileAdapter):
         self,
         input_path: Path,
         output_path: Path,
-        replace_fn: Callable[[str], str],
+        replace_fn,
         pii_columns: Optional[List[str]] = None,
         keep_columns: Optional[List[str]] = None,
     ) -> None:
@@ -96,7 +96,15 @@ class CsvAdapter(FileAdapter):
                 for col in headers:
                     cell = row.get(col, "")
                     if col in target_columns and cell:
-                        new_row[col] = replace_fn(cell)
+                        # If replace_fn accepts column_name (engine.anonymize_cell),
+                        # pass it for blind-mode PII type inference
+                        if hasattr(replace_fn, '__func__') or callable(replace_fn):
+                            try:
+                                new_row[col] = replace_fn(cell, column_name=col)
+                            except TypeError:
+                                new_row[col] = replace_fn(cell)
+                        else:
+                            new_row[col] = replace_fn(cell)
                     else:
                         new_row[col] = cell
                 writer.writerow(new_row)
@@ -109,13 +117,18 @@ def _resolve_target_columns(
     pii_columns: Optional[List[str]],
     keep_columns: Optional[List[str]],
 ) -> set:
-    """Return the set of column names that should be processed."""
+    """Return the set of column names that should be processed.
+
+    Matching is case-insensitive: a template with "Username" will match
+    a CSV header "username" or "USERNAME".
+    """
+    # Build a case-insensitive lookup: lowered → actual header name
+    header_lower = {h.lower(): h for h in headers}
+
     if pii_columns:
-        # Only anonymize explicitly listed columns that actually exist
-        return {c for c in pii_columns if c in headers}
+        return {header_lower[c.lower()] for c in pii_columns if c.lower() in header_lower}
     if keep_columns:
-        # Anonymize every column except the keep list
-        keep_set = set(keep_columns)
-        return {c for c in headers if c not in keep_set}
+        keep_lower = {c.lower() for c in keep_columns}
+        return {h for h in headers if h.lower() not in keep_lower}
     # No filter — anonymize all columns
     return set(headers)

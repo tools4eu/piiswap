@@ -75,6 +75,67 @@ class AnonymizationEngine:
         # Step 4: Replace using flashtext (uses all mappings in store)
         return self.replacer.anonymize_text(text)
 
+    def anonymize_cell(self, value: str, column_name: str = "", source_file: str = "") -> str:
+        """Anonymize a single cell value from column-aware mode.
+
+        If the value is already in the mapping store, return its token.
+        If detectors recognize it, register and replace normally.
+        Otherwise, register the entire value as PII based on the column name
+        (blind mode: the column label tells us it IS PII).
+        """
+        if not value or not value.strip():
+            return value
+
+        # Check if already mapped
+        existing = self.store.get_mapping_by_raw(value, self.case_id)
+        if existing:
+            return existing["token"]
+
+        # Check if detectors recognize it
+        result = self.anonymize_text(value, source_file)
+        if result != value:
+            return result
+
+        # Blind mode: the column says this is PII, register it as-is
+        # Determine PII type from column name
+        pii_type = self._column_to_pii_type(column_name)
+
+        # Skip very short values or obvious non-PII
+        if len(value.strip()) < 2:
+            return value
+
+        entity_id = self.resolver.resolve(pii_type, value, source_file)
+        token = self.tokenizer.generate(pii_type)
+        self.store.add_mapping(
+            entity_id=entity_id,
+            pii_type=pii_type,
+            raw_value=value,
+            token=token,
+            case_id=self.case_id,
+            source_file=source_file,
+        )
+        return token
+
+    @staticmethod
+    def _column_to_pii_type(column_name: str) -> str:
+        """Infer PII type from a column name."""
+        col = column_name.lower()
+        if "email" in col:
+            return "email"
+        if "phone" in col or "mobile" in col or "gsm" in col or "tel" in col:
+            return "phone"
+        if "user" in col or "login" in col or "screen" in col or "nick" in col:
+            return "username"
+        if "name" in col or "naam" in col:
+            return "name"
+        if "address" in col or "adres" in col:
+            return "address"
+        if "iban" in col:
+            return "iban"
+        if "bio" in col:
+            return "name"
+        return "name"  # Default fallback
+
     def deanonymize_text(self, text: str, only_types: Optional[List[str]] = None) -> str:
         """Replace tokens back to original PII values.
 
@@ -142,7 +203,7 @@ class AnonymizationEngine:
         if (self.pii_columns or self.keep_columns) and _adapter_supports_columns(adapter):
             if hasattr(adapter, "anonymize_column_aware"):
                 adapter.anonymize_column_aware(
-                    input_path, output_path, self.replacer.anonymize_text,
+                    input_path, output_path, self.anonymize_cell,
                     pii_columns=self.pii_columns, keep_columns=self.keep_columns,
                 )
             elif hasattr(adapter, "anonymize_preserving_format"):

@@ -33,8 +33,10 @@ TEMPLATES = {
     },
     "telegram-user": {
         "description": "Telegram user/message data",
-        "pii_columns": ["username", "first_name", "last_name", "phone_number", "bio"],
-        "keep_columns": ["user_id", "date", "message_id", "chat_id", "ip_address"],
+        "pii_columns": ["username", "Username", "first_name", "last_name", "Name",
+                        "phone_number", "Phone", "bio"],
+        "keep_columns": ["user_id", "ID", "date", "DTG", "message_id", "chat_id",
+                        "ip_address", "IP", "Type"],
     },
     "meta-records": {
         "description": "Meta (Facebook/Instagram) subscriber records",
