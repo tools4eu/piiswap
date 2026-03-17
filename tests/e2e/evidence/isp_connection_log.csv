@@ -1,0 +1,8 @@
+timestamp,subscriber_name,subscriber_email,source_ip,dest_ip,dest_port,protocol,bytes_sent,session_duration
+2026-03-01T08:00:00Z,Tom Vandenberghe,tom.vandenberghe@acme-corp.example.com,84.193.22.41,13.107.6.152,443,HTTPS,15234,300
+2026-03-01T08:15:00Z,Tom Vandenberghe,tom.vandenberghe@acme-corp.example.com,84.193.22.41,52.96.0.34,443,HTTPS,8921,120
+2026-03-01T09:30:00Z,Lisa Martens,lisa.martens@acme-corp.example.com,91.182.33.55,13.107.6.152,443,HTTPS,4521,60
+2026-03-01T10:00:00Z,Tom Vandenberghe,tom.vandenberghe@acme-corp.example.com,84.193.22.41,185.220.101.44,443,HTTPS,892341,1800
+2026-03-01T10:30:00Z,Tom Vandenberghe,tom.vandenberghe@acme-corp.example.com,84.193.22.41,45.33.32.156,8443,HTTPS,234891,900
+2026-03-01T11:00:00Z,Tom Vandenberghe,tom.vandenberghe@acme-corp.example.com,84.193.22.41,104.21.55.103,443,HTTPS,12345,60
+2026-03-01T14:00:00Z,Lisa Martens,lisa.martens@acme-corp.example.com,91.182.33.55,52.96.0.34,443,HTTPS,3421,45

@@ -1,0 +1,10 @@
+Timestamp,UserPrincipalName,DisplayName,IPAddress,Location,Status,AppDisplayName,DeviceName
+2026-03-01T08:15:00Z,tom.vandenberghe@acme-corp.example.com,Tom Vandenberghe,84.193.22.41,Brussels BE,Success,Microsoft 365,LAPTOP-TOMVDB
+2026-03-01T08:20:00Z,tom.vandenberghe@acme-corp.example.com,Tom Vandenberghe,84.193.22.41,Brussels BE,Success,Outlook,LAPTOP-TOMVDB
+2026-03-01T09:30:00Z,lisa.martens@acme-corp.example.com,Lisa Martens,91.182.33.55,Antwerp BE,Success,SharePoint,DESKTOP-LMARTENS
+2026-03-01T10:00:00Z,tom.vandenberghe@acme-corp.example.com,Tom Vandenberghe,185.220.101.44,Moscow RU,Success,Microsoft 365,unknown
+2026-03-01T10:05:00Z,tom.vandenberghe@acme-corp.example.com,Tom Vandenberghe,185.220.101.44,Moscow RU,Success,Exchange Online,unknown
+2026-03-01T10:10:00Z,admin@acme-corp.example.com,Admin Account,185.220.101.44,Moscow RU,Failure,Azure Portal,unknown
+2026-03-01T10:11:00Z,admin@acme-corp.example.com,Admin Account,185.220.101.44,Moscow RU,Failure,Azure Portal,unknown
+2026-03-01T10:12:00Z,admin@acme-corp.example.com,Admin Account,185.220.101.44,Moscow RU,Success,Azure Portal,unknown
+2026-03-01T14:00:00Z,lisa.martens@acme-corp.example.com,Lisa Martens,91.182.33.55,Antwerp BE,Success,Teams,DESKTOP-LMARTENS

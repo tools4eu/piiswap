@@ -1,0 +1,21 @@
+{
+  "account": {
+    "user_id": "CRX-882741",
+    "email": "tom.vandenberghe@acme-corp.example.com",
+    "phone": "+32 476 11 22 33",
+    "full_name": "Tom Vandenberghe",
+    "date_of_birth": "1992-05-14",
+    "address": "Kerkstraat 42, 2000 Antwerpen",
+    "iban": "BE71 0961 2345 6769",
+    "kyc_status": "verified",
+    "registration_date": "2025-06-20T14:30:00Z"
+  },
+  "wallets": [
+    {"currency": "BTC", "address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", "balance": "1.234"},
+    {"currency": "ETH", "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD68", "balance": "15.5"}
+  ],
+  "transactions": [
+    {"date": "2026-02-28", "type": "withdrawal", "currency": "BTC", "amount": "0.5", "dest_address": "bc1q9h5yjqka3mz2f3hp3x7fk4l5yg93cy3fkx8hn", "ip": "84.193.22.41"},
+    {"date": "2026-03-01", "type": "withdrawal", "currency": "BTC", "amount": "0.734", "dest_address": "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", "ip": "185.220.101.44"}
+  ]
+}

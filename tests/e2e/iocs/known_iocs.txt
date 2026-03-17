@@ -1,0 +1,11 @@
+# Known IOCs for CASE-E2E-001
+# IPs are auto-protected by allowlist, but domains need explicit protection
+
+# Suspicious domains
+darknet-market.onion
+protonmail.com
+
+# Crypto wallet addresses (investigation targets)
+bc1q9h5yjqka3mz2f3hp3x7fk4l5yg93cy3fkx8hn
+bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+0x742d35Cc6634C0532925a3b844Bc9e7595f2bD68

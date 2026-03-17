@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piiswap"
+version = "0.2.0"
+description = "Bidirectional PII anonymization pipeline for DFIR case data"
+requires-python = ">=3.9"
+dependencies = [
+    "flashtext>=2.7",
+    "pandas>=1.4",
+    "click>=8.0",
+    "cryptography>=41.0",
+]
+
+[project.optional-dependencies]
+formats = [
+    "python-docx>=0.8",
+    "pdfplumber>=0.9",
+    "ruamel.yaml>=0.17",
+    "openpyxl>=3.0",
+]
+forensics = [
+    "python-evtx>=0.7",
+    "scapy>=2.5",
+]
+ml = [
+    "spacy>=3.5",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+all = [
+    "piiswap[formats,forensics,ml]",
+]
+
+[project.scripts]
+piiswap = "piiswap.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,24 @@
+{
+  "account_information": {
+    "username": "tom_vdb_snap",
+    "display_name": "Tom V.",
+    "email": "tom.vandenberghe@acme-corp.example.com",
+    "phone_number": "+32 476 11 22 33",
+    "creation_date": "2023-08-15T10:00:00Z",
+    "snap_id": "9283746510"
+  },
+  "login_history": [
+    {"timestamp": "2026-03-01T07:55:00Z", "ip_address": "84.193.22.41", "device": "iPhone 15 Pro", "status": "success"},
+    {"timestamp": "2026-03-01T10:02:00Z", "ip_address": "185.220.101.44", "device": "Android Unknown", "status": "success"},
+    {"timestamp": "2026-03-01T18:30:00Z", "ip_address": "84.193.22.41", "device": "iPhone 15 Pro", "status": "success"}
+  ],
+  "friends_list": [
+    {"username": "lisa_m_2000", "display_name": "Lisa M.", "added_date": "2024-01-10"},
+    {"username": "darkweb_dealer99", "display_name": "DW", "added_date": "2025-11-05"},
+    {"username": "crypto_mike_btc", "display_name": "Mike C.", "added_date": "2025-12-20"}
+  ],
+  "social_links": {
+    "instagram": "@tom.vandenberghe",
+    "twitter": "@TomVDB_official"
+  }
+}
