@@ -21,6 +21,10 @@ class Replacer:
     def build_anonymize_processor(self) -> KeywordProcessor:
         """Build a flashtext processor: raw_value → token."""
         kp = KeywordProcessor(case_sensitive=True)
+        # Treat URL path separators and backslashes as word boundaries so that
+        # a username inside a profile URL like instagram.com/tom.doe is matched
+        # when the stored raw_value is just "tom.doe".
+        kp.non_word_boundaries -= {'/', '\\'}
         mappings = self.store.get_all_mappings(self.case_id)
 
         # Sort by length descending so longer matches take priority
@@ -48,6 +52,9 @@ class Replacer:
                         mappings whose pii_type is in this list.
         """
         kp = KeywordProcessor(case_sensitive=True)
+        # Mirror the anonymize processor: keep URL path separators as word
+        # boundaries so tokens inside paths are matched during de-anonymization.
+        kp.non_word_boundaries -= {'/', '\\'}
 
         if only_types is not None:
             mappings = self.store.get_mappings_by_types(self.case_id, list(only_types))

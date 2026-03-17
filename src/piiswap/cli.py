@@ -174,8 +174,11 @@ def new(case_id, base_dir, password):
 @click.option("--keep-columns", default=None,
               help="Comma-separated column names to keep unchanged (CSV/Excel only). "
                    "All other columns will be anonymized.")
+@click.option("--template", "template_name", default=None,
+              help="Provider template for automatic column configuration (e.g. microsoft-signin). "
+                   "Explicit --pii-columns/--keep-columns always override the template.")
 def anonymize(input_path, output, case_id, password, recursive, strict, dry_run, ioc_file,
-              include_types, exclude_types, pii_columns, keep_columns):
+              include_types, exclude_types, pii_columns, keep_columns, template_name):
     """Anonymize file(s) — replace PII with tokens."""
     from piiswap.core.engine import AnonymizationEngine
     from piiswap.store.database import MappingStore
@@ -210,6 +213,22 @@ def anonymize(input_path, output, case_id, password, recursive, strict, dry_run,
         exclude_list = [t.strip() for t in exclude_types.split(",")] if exclude_types else None
         pii_col_list = _parse_columns(pii_columns)
         keep_col_list = _parse_columns(keep_columns)
+
+        # Apply provider template when requested; explicit flags take priority.
+        if template_name:
+            from piiswap.templates import get_template, list_templates
+            tmpl = get_template(template_name)
+            if not tmpl:
+                available = ", ".join(name for name, _ in list_templates())
+                click.echo(
+                    f"Unknown template '{template_name}'. Available: {available}", err=True
+                )
+                sys.exit(1)
+            click.echo(f"Using template: {template_name} ({tmpl['description']})")
+            if not pii_col_list:
+                pii_col_list = tmpl.get("pii_columns", [])
+            if not keep_col_list:
+                keep_col_list = tmpl.get("keep_columns", [])
 
         engine = _build_engine(store, case_id, strict,
                                include_types=include_list, exclude_types=exclude_list,
@@ -330,7 +349,11 @@ def deanonymize(input_path, output, case_id, password, recursive, only,
                    "All other types are ignored.")
 @click.option("--exclude-types", default=None,
               help="Comma-separated PII types to skip (e.g. hostname,filepath_user).")
-def scan(input_path, case_id, password, recursive, strict, ioc_file, include_types, exclude_types):
+@click.option("--template", "template_name", default=None,
+              help="Provider template for automatic column configuration (e.g. isp-connection). "
+                   "Explicit --pii-columns/--keep-columns always override the template.")
+def scan(input_path, case_id, password, recursive, strict, ioc_file, include_types, exclude_types,
+         template_name):
     """Dry-run: show what PII would be detected without changing anything."""
     from piiswap.core.engine import AnonymizationEngine
     from piiswap.store.database import MappingStore
@@ -354,8 +377,26 @@ def scan(input_path, case_id, password, recursive, strict, ioc_file, include_typ
         include_list = [t.strip() for t in include_types.split(",")] if include_types else None
         exclude_list = [t.strip() for t in exclude_types.split(",")] if exclude_types else None
 
+        pii_col_list: List[str] = []
+        keep_col_list: List[str] = []
+
+        # Apply provider template when requested.
+        if template_name:
+            from piiswap.templates import get_template, list_templates
+            tmpl = get_template(template_name)
+            if not tmpl:
+                available = ", ".join(name for name, _ in list_templates())
+                click.echo(
+                    f"Unknown template '{template_name}'. Available: {available}", err=True
+                )
+                sys.exit(1)
+            click.echo(f"Using template: {template_name} ({tmpl['description']})")
+            pii_col_list = tmpl.get("pii_columns", [])
+            keep_col_list = tmpl.get("keep_columns", [])
+
         engine = _build_engine(store, case_id, strict,
-                               include_types=include_list, exclude_types=exclude_list)
+                               include_types=include_list, exclude_types=exclude_list,
+                               pii_columns=pii_col_list, keep_columns=keep_col_list)
         _run_scan(engine, input_path, recursive)
 
 
@@ -627,6 +668,24 @@ def link(token1, token2, case_id, password):
     ])
 
 
+# --- Templates command ---
+
+@main.command()
+def templates():
+    """List available provider data templates."""
+    from piiswap.templates import list_templates
+
+    click.echo("Available templates:\n")
+    click.echo(f"  {'Name':<22} Description")
+    click.echo(f"  {'-' * 22} {'-' * 50}")
+    for name, desc in list_templates():
+        click.echo(f"  {name:<22} {desc}")
+
+    click.echo("\nUsage:")
+    click.echo("  piiswap anonymize data.csv --template microsoft-signin")
+    click.echo("  piiswap scan data.csv --template isp-connection")
+
+
 # --- Helpers ---
 
 def _parse_columns(raw: str) -> List[str]:
@@ -769,6 +828,7 @@ def _run_scan(engine, input_path, recursive):
             "piiswap allowlist add-domain <domain>       Protect a domain + its emails",
             "piiswap scan <path> -r --exclude-types <t>  Skip specific PII types",
             "piiswap scan <path> -r --ioc-file <file>    Protect IOCs during scan",
+            "piiswap templates                           List provider data templates",
         ])
     else:
         _hint([

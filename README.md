@@ -239,6 +239,18 @@ pytest -v                        # verbose output
 - **Phase 2** (complete): Format adapters (docx, pdf, xlsx, csv, sqlite, evtx, pcap), social media handle detection, allowlist ecosystem (domain-aware, bulk import, IOC file), type filtering, column-aware mode, selective de-anonymization
 - **Phase 3** (planned): SpaCy NER and local LLM plugins for context-aware detection
 
+## Staying up to date
+
+piiswap is under active development. New detectors, provider templates, and bug fixes are added regularly. Pull the latest version:
+
+```bash
+cd /path/to/piiswap
+git pull origin main
+pip install -e ".[formats]"
+```
+
+Check the [CHANGELOG.md](CHANGELOG.md) for what's new.
+
 ## Contributing
 
 This project is in active development. Contributions of any kind are welcome:
