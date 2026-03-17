@@ -90,6 +90,9 @@
 │  │  → CredentialDetector   (password=, pwd=, etc.)     │    │
 │  │  → FilePathUserDetector (C:\Users\<NAME>\)          │    │
 │  │  → HostnamePIIDetector  (LAPTOP-<NAME>)             │    │
+│  │  → SocialDetector       (@user, u/user, URLs)       │    │
+│  │  → FieldLabelDetector   (Name: Jan, Email: ...)     │    │
+│  │  → SnapchatDetector     (production CSV parsing)    │    │
 │  └─────────────────────────────────────────────────────┘    │
 │                          │                                  │
 │                          v                                  │
@@ -223,6 +226,8 @@ apikey          ANONKEY###             ANONKEY001
 password        ANONPASS###            ANONPASS001
 address         ANONADDR###            ANONADDR001
 hostname        ANONHOST###            ANONHOST001
+social_handle   ANONHANDLE###          ANONHANDLE001
+name            ANONNAME###            ANONNAME001
 filepath_user   (replaces user part)   C:\Users\ANONUSER001\
 
 Note: tokens NEVER contain special characters (< > - & ' ")
@@ -234,9 +239,9 @@ Note: tokens NEVER contain special characters (< > - & ' ")
 ```
   Analyst                           piiswap                    Cloud LLM
     │                                  │                            │
-    │  piiswap init CASE-042         │                            │
+    │  piiswap new CASE-042          │                            │
     │─────────────────────────────────>│                            │
-    │  (mapping DB created)            │                            │
+    │  (case dir + mapping DB created) │                            │
     │                                  │                            │
     │  piiswap scan ./data/ -r       │                            │
     │─────────────────────────────────>│                            │

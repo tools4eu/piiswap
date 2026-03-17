@@ -82,24 +82,36 @@ $env:PIISWAP_KEY = "my-password"
 
 ## 3. Setting up a case
 
-### Step 1: Create a working directory
+### Option A: Quick setup with `piiswap new` (recommended)
 
-Create a directory for your case containing the evidence you want to anonymize:
+Create a complete case directory with standard structure in one command:
+
+```bash
+piiswap new CASE-2026-042
+```
+
+This creates:
 
 ```
 CASE-2026-042/
-├── evidence/                    # Original files (DO NOT MODIFY)
-│   ├── auth.log
-│   ├── webserver_access.log
-│   ├── incident_notes.md
-│   ├── c2_config.json
-│   └── database_export.csv
-└── (piiswap will create additional directories here)
+├── evidence/           # Drop your files here (DO NOT MODIFY originals)
+├── evidence_anon/      # Anonymized output (auto-generated)
+├── iocs/               # IOC files for allowlist import
+├── llm_output/         # Save LLM analysis results here
+├── restored/           # De-anonymized reports (auto-generated)
+├── .piiswap/           # Mapping database
+└── README.md           # Quick start guide
 ```
 
-> **Important**: The original files are NEVER modified. piiswap always creates a copy.
+With encryption:
 
-### Step 2: Initialize the mapping database
+```bash
+piiswap new CASE-2026-042 -p "strong-password"
+```
+
+### Option B: Manual setup with `piiswap init`
+
+If you already have a case directory:
 
 ```bash
 cd CASE-2026-042
@@ -113,6 +125,8 @@ You can also specify a custom case ID:
 ```bash
 piiswap init MyCase
 ```
+
+> **Important**: The original files are NEVER modified. piiswap always creates a copy.
 
 ### With encryption (recommended)
 
@@ -173,6 +187,16 @@ First review what gets detected, without changing anything:
 piiswap scan evidence/ -r
 ```
 
+Advanced scan options:
+
+```bash
+piiswap scan evidence/ -r --strict                     # only full name pairs
+piiswap scan evidence/ -r --include-types email,phone  # only specific types
+piiswap scan evidence/ -r --exclude-types hostname     # skip specific types
+piiswap scan evidence/ -r --ioc-file known_iocs.txt    # protect IOCs
+piiswap scan data.csv --template microsoft-signin      # use provider template
+```
+
 The output shows per file which PII was found:
 
 ```
@@ -187,11 +211,20 @@ Total: 42 PII matches in 8 files
 
 ### Step 2: Adjust the allowlist (optional)
 
-If the scan detects something you do NOT want to anonymize (e.g., a company name that should be preserved):
+If the scan detects something you do NOT want to anonymize:
 
 ```bash
-piiswap allowlist add "company.be" --type domain --reason "Own organization"
+# Protect a domain + all its emails + subdomains
+piiswap allowlist add-domain company.be --reason "Own organization"
+
+# Protect a single value
 piiswap allowlist add "admin_backup" --type alias --reason "Generic service account"
+
+# Bulk import IOCs from a file (one per line, or CSV)
+piiswap allowlist import-file iocs/known_iocs.txt --type ioc
+
+# Import from a specific CSV column
+piiswap allowlist import-file data.csv --type domain --column 2
 ```
 
 View the current allowlist:
@@ -200,11 +233,19 @@ View the current allowlist:
 piiswap allowlist list
 ```
 
+Remove an entry:
+
+```bash
+piiswap allowlist remove "admin_backup"
+```
+
 ### Step 3: Anonymize
 
 ```bash
 piiswap anonymize evidence/ -r -o evidence_anon/
 ```
+
+#### Provider templates
 
 For provider data (CSV/Excel), use a template for automatic column configuration:
 
@@ -216,6 +257,28 @@ piiswap anonymize data.csv --template isp-connection       # ISP connection logs
 ```
 
 Templates use **blind mode**: every value in a PII column is anonymized, even if no detector recognizes it. This ensures provider-specific usernames and display names are always caught.
+
+#### Advanced options
+
+```bash
+# Dry-run: preview what would be anonymized without making changes
+piiswap anonymize evidence/ -r --dry-run
+
+# Protect IOCs from anonymization during the run
+piiswap anonymize evidence/ -r -o evidence_anon/ --ioc-file known_iocs.txt
+
+# Only anonymize specific PII types
+piiswap anonymize evidence/ -r -o evidence_anon/ --include-types email,phone,iban
+
+# Skip specific PII types
+piiswap anonymize evidence/ -r -o evidence_anon/ --exclude-types hostname,filepath_user
+
+# Column-aware mode for CSV/Excel (without template)
+piiswap anonymize data.csv -o data_anon.csv --pii-columns "name,email,phone"
+piiswap anonymize data.csv -o data_anon.csv --keep-columns "ip,timestamp,hash"
+```
+
+> **Note**: Explicit `--pii-columns`/`--keep-columns` always override template settings.
 
 This does the following:
 1. **Pass 1**: Scans ALL files and builds the complete mapping store
@@ -269,6 +332,19 @@ After analysis (by yourself, an LLM, or an external party) you can translate tok
 
 ```bash
 piiswap deanonymize evidence_anon/ -r -o evidence_restored/
+```
+
+#### Selective de-anonymization
+
+You can restore only specific PII types while keeping others masked. This is useful when sharing results where some PII should remain hidden (e.g., keep passwords masked):
+
+```bash
+# Restore only usernames and emails — passwords and IBANs stay masked
+piiswap deanonymize llm_output/ -r -o restored/ --only username,email
+
+# Column-aware de-anonymization for CSV/Excel
+piiswap deanonymize data_anon.csv -o data.csv --pii-columns "name,email"
+piiswap deanonymize data_anon.csv -o data.csv --keep-columns "password,iban"
 ```
 
 ---
@@ -329,6 +405,7 @@ Credential SuperGeheim123! was found in the config file.
 2. **The LLM can simply refer to ANONUSER001** in its analysis — after de-anonymization this automatically becomes the real name
 3. **Multiple reports?** No problem — de-anonymize them all at once with `-r`
 4. **IP addresses are intentionally kept in the output** — they are forensic indicators and are not anonymized
+5. **Selective de-anonymization**: use `--only username,email` to restore names but keep passwords/IBANs masked in shared reports
 
 ---
 
@@ -359,23 +436,26 @@ When a case is finished, you don't need to do anything special. The tokens are n
 
 ### Starting a new case
 
-Simply create a new directory and initialize:
+The easiest way is with `piiswap new`:
+
+```bash
+piiswap new CASE-2026-043
+
+# Copy your evidence
+cp -r /path/to/new/evidence CASE-2026-043/evidence/
+
+# Continue with the normal workflow
+cd CASE-2026-043
+piiswap scan evidence/ -r
+piiswap anonymize evidence/ -r -o evidence_anon/
+```
+
+Or manually:
 
 ```bash
 mkdir CASE-2026-043
 cd CASE-2026-043
-
-# Copy your evidence
-cp -r /path/to/new/evidence ./evidence/
-
-# Initialize
 piiswap init
-# or with an explicit case ID:
-piiswap init CASE-2026-043
-
-# Continue with the normal workflow
-piiswap scan evidence/ -r
-piiswap anonymize evidence/ -r -o evidence_anon/
 ```
 
 The new case has:
@@ -465,6 +545,8 @@ piiswap anonymize /path/to/evidence -r -o /path/to/output -c CASE-2026-042
 | API keys | DEMO_KEY_..., ghp_... | ANONKEY001 |
 | File paths (with user) | C:\Users\john\... | ANONUSER001 |
 | Hostnames | DESKTOP-JOHNPC | ANONHOST001 |
+| Social handles | @john_doe, u/crypto_user, profile URLs | ANONHANDLE001 |
+| Snapchat data | Usernames, emails, phones from production CSVs | (per PII type) |
 
 ### Is NOT anonymized (protected by allowlist)
 
@@ -539,13 +621,27 @@ The mapping database contains **all real PII** and is therefore the most sensiti
 
 ### What if the scan detects too much or too little?
 
-- **Too much**: Add false positives to the allowlist
-- **Too little**: Check whether the file format is supported (see section 8)
+- **Too much**: Add false positives to the allowlist, or use `--exclude-types` to skip entire PII categories
+- **Too little**: Check whether the file format is supported (see section 8), or try without `--strict`
 - **Strict mode**: Use `--strict` to only detect full name pairs (first + last name), not standalone first names
+- **Type filtering**: Use `--include-types` to only detect specific types, or `--exclude-types` to skip types
 
 ```bash
 piiswap scan evidence/ -r --strict
+piiswap scan evidence/ -r --exclude-types hostname,filepath_user
+piiswap scan evidence/ -r --include-types email,phone,iban
 ```
+
+### Can I de-anonymize only specific PII types?
+
+Yes! Use `--only` to selectively restore certain types while keeping others masked:
+
+```bash
+# Restore names and emails, but keep passwords and IBANs masked
+piiswap deanonymize report_anon.md -o report.md --only username,email,firstname,lastname
+```
+
+This is useful when sharing analysis results where some PII should remain hidden.
 
 ### Can I manually link two entities?
 
@@ -571,22 +667,30 @@ That is by design: in case A, `jan.janssens` is ANONUSER001, in case B, `jan.jan
 
 ```bash
 # Setup
-piiswap init [CASE-ID] [-p password]
+piiswap new <CASE-ID> [-p password]              # Create case dir + init DB
+piiswap init [CASE-ID] [-p password]              # Init DB in existing dir
 
 # Analysis
-piiswap scan <path> -r [--strict]
-piiswap anonymize <path> -r -o <output> [--strict]
+piiswap scan <path> -r [--strict] [--template <t>] [--ioc-file <f>]
+    [--include-types <t>] [--exclude-types <t>]
+piiswap anonymize <path> -r -o <output> [--strict] [--dry-run]
+    [--template <t>] [--ioc-file <f>]
+    [--include-types <t>] [--exclude-types <t>]
+    [--pii-columns <cols>] [--keep-columns <cols>]
 piiswap deanonymize <path> -r -o <output>
+    [--only <types>] [--pii-columns <cols>] [--keep-columns <cols>]
 piiswap verify <original> <anonymized>
 
 # Management
 piiswap status [-c CASE-ID]
 piiswap mappings [-c CASE-ID]
 piiswap link <token1> <token2>
+piiswap templates                                 # List provider templates
 
 # Allowlist
-piiswap allowlist add <value> [--type domain] [--reason "reason"]
+piiswap allowlist add <value> [--type <t>] [--reason "reason"]
+piiswap allowlist add-domain <domain> [--reason "reason"]
+piiswap allowlist import-file <file> [--type <t>] [--column <n>]
 piiswap allowlist list
 piiswap allowlist remove <value>
-```
 ```

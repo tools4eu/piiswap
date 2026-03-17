@@ -34,6 +34,7 @@ Bidirectional PII anonymization pipeline for DFIR case data. Replaces personally
 | Social handle | `@john_doe`, `u/crypto_user`, profile URLs | ANONHANDLE001 |
 | Name | First/last names, display names via field labels | ANONNAME001 |
 | Address | Street addresses (Belgian + international) | ANONADDR001 |
+| Snapchat data | Usernames, emails, phones from Snapchat production CSVs | (per PII type) |
 
 ## Provider templates
 
@@ -98,6 +99,15 @@ piiswap deanonymize ./evidence_anon -r -o ./evidence_restored
 ```
 
 ## CLI commands
+
+### `piiswap new <CASE-ID>`
+
+Create a complete case directory with standard structure (`evidence/`, `evidence_anon/`, `iocs/`, `llm_output/`, `restored/`) and initialize the mapping database in one step.
+
+```bash
+piiswap new CASE-2026-050
+piiswap new CASE-2026-050 -p "my-secret-password"   # encrypted database
+```
 
 ### `piiswap init [CASE-ID]`
 
@@ -259,8 +269,8 @@ pytest -v                        # verbose output
 
 ## Project status
 
-- **Phase 1** (complete): Core engine, 11 PII detectors, plaintext adapter, encrypted store, CLI
-- **Phase 2** (complete): Format adapters (docx, pdf, xlsx, csv, sqlite, evtx, pcap), social media handle detection, field label detection, allowlist ecosystem (domain-aware, bulk import, IOC file), type filtering, column-aware mode with blind mode, selective de-anonymization, provider templates (7 providers), 126 tests
+- **Phase 1** (complete): Core engine, 12 PII detectors, plaintext adapter, encrypted store, CLI
+- **Phase 2** (complete): Format adapters (docx, pdf, xlsx, csv, sqlite, evtx, pcap), social media handle detection, field label detection, Snapchat production data detector, allowlist ecosystem (domain-aware, bulk import, IOC file), type filtering, column-aware mode with blind mode, selective de-anonymization, `piiswap new` case scaffolding, provider templates (7 providers), 126 tests
 - **Phase 3** (planned): SpaCy NER and local LLM plugins for context-aware detection
 
 ## Staying up to date
